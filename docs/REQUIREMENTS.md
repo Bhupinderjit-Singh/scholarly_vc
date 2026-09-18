@@ -266,7 +266,7 @@ stateDiagram-v2
 
 #### F2-R4 Lifecycle and expiry
 **User Story:** As a Student, I want sessions to move through clear states automatically, so that lists and stats are always accurate.
-1. THE API SHALL implement the state machine of section 4.2: `scheduled → live`, `live → ended`, `scheduled → cancelled`, `scheduled → expired`; instant sessions start in `live`.
+1. THE API SHALL implement the session state machine shown in the state diagram: `scheduled → live`, `live → ended`, `scheduled → cancelled`, `scheduled → expired`; instant sessions start in `live`.
 2. WHEN the first `participant_joined` webhook for a `scheduled` session is processed THEN THE API SHALL set `status = live` and `started_at` to the event timestamp.
 3. WHEN a `room_finished` webhook is processed for a `live` session THEN THE API SHALL set `status = ended`, set `ended_at` to the event timestamp, and close every open participation and camera interval of that session at that time.
 4. WHEN the Host selects "End for all" THEN THE API SHALL delete the room on the SFU, set `status = ended` and `ended_at = now` immediately, and ignore the later `room_finished` for that room.
