@@ -163,7 +163,7 @@ stateDiagram-v2
 3. THE API SHALL accept a password only if it is at least 10 characters long and absent from a bundled common-password denylist of at least 10,000 entries.
 4. IF the username is already taken THEN THE API SHALL reject the sign-up with "That username is taken".
 5. IF the email already belongs to an account THEN THE API SHALL respond exactly as for a successful sign-up, send that address an email explaining an account already exists, and create no duplicate.
-6. WHEN sign-up succeeds THEN THE API SHALL create the account, start a session, and send the verification email (F1-R5).
+6. WHEN sign-up succeeds THEN THE API SHALL create the account without starting a session, send the verification email (F1-R5), and show a "Check your email" page that also offers "Sign in now".
 7. WHEN a Visitor submits the sign-in form THEN THE API SHALL accept either an email address or a username in the identifier field together with the password.
 8. IF sign-in credentials are invalid THEN THE API SHALL respond with "Incorrect email/username or password" regardless of whether the identifier exists.
 9. THE API SHALL hash passwords with Better Auth's default scrypt configuration and never store or log plaintext passwords.
@@ -171,7 +171,7 @@ stateDiagram-v2
 #### F1-R5 Email verification
 **User Story:** As a Student, I want to verify my email address, so that Scholarly can safely send me notifications.
 1. WHEN an account is created with email and password THEN THE API SHALL send a verification email containing a single-use link valid for 24 hours.
-2. WHEN a valid verification link is opened THEN THE API SHALL mark the email verified and show a confirmation page linking to Home.
+2. WHEN a valid verification link is opened THEN THE API SHALL mark the email verified, sign the user in on that device, and show a confirmation page linking to Home.
 3. IF a verification link is expired or already used THEN THE Web App SHALL show an explanation with a "Send a new link" action.
 4. WHEN a new verification email is requested THEN THE API SHALL send it only if at least 60 s have passed since the previous one for that account.
 5. WHILE the account email is unverified THE Web App SHALL show a dismissible banner on every app page with a "Resend" action, reappearing at the next sign-in.
@@ -182,7 +182,7 @@ stateDiagram-v2
 **User Story:** As a Student, I want to reset a forgotten password and change my current one, so that I keep control of my account.
 1. WHEN a Visitor submits the "Forgot password" form THEN THE API SHALL respond with "If an account exists for that email, we sent a reset link" regardless of whether the account exists.
 2. IF the email belongs to an account THEN THE API SHALL send a single-use reset link valid for 1 hour.
-3. WHEN a valid reset link is used with a password meeting F1-R4 rules THEN THE API SHALL update the password, invalidate every existing session of the account, and sign the user in on the current device.
+3. WHEN a valid reset link is used with a password meeting F1-R4 rules THEN THE API SHALL update the password, invalidate every existing session of the account, and show the sign-in page with "Password updated. Sign in with your new password".
 4. IF a reset link is expired or already used THEN THE Web App SHALL show an explanation and a link to request a new one.
 5. WHEN a signed-in Student changes their password THEN THE API SHALL require the current password and, on success, invalidate every session except the current one.
 6. IF the account has no password (Google only) THEN THE Web App SHALL offer "Set a password" through the reset-email flow instead of asking for a current password.
@@ -190,7 +190,7 @@ stateDiagram-v2
 #### F1-R7 Rate limiting and anti-enumeration
 **User Story:** As the owner, I want authentication endpoints protected against guessing and probing, so that accounts stay safe on a public sign-up app.
 1. THE API SHALL limit sign-in, password-reset request, and verification-resend attempts to 5 per 15 minutes per combination of client IP and identifier.
-2. WHEN a limit is exceeded THEN THE API SHALL respond with HTTP 429, a `Retry-After` header, and "Too many attempts. Try again in N minutes".
+2. WHEN a limit is exceeded THEN THE API SHALL respond with HTTP 429, a `Retry-After` or `X-Retry-After` header carrying the seconds to wait, and "Too many attempts. Try again in N minutes".
 3. THE API SHALL return identical status codes and messages for existing and non-existing identifiers on sign-in and reset endpoints, with response times differing by no more than 100 ms.
 4. THE API SHALL limit account creation to 10 per hour per client IP.
 
