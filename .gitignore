@@ -1,0 +1,34 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python (Modal worker)
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.modal/
+
+# Environment files (keep the example)
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+
+# Test artifacts
+test-results/
+playwright-report/
+
+# Vercel
+.vercel/
