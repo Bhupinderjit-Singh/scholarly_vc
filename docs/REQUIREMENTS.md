@@ -792,15 +792,72 @@ Each spec is implemented in order; each ends in a demoable increment.
 
 ## 11. Traceability
 
-| Requirement IDs | Spec file |
-|---|---|
-| F1-R1 … F1-R12 | `.kiro/specs/01-foundation-auth/requirements.md` |
-| F2-R1 … F2-R16 | `.kiro/specs/02-study-sessions/requirements.md` |
-| F3-R1 … F3-R6 | `.kiro/specs/03-dashboard-history/requirements.md` |
-| F4-R1 … F4-R6 | `.kiro/specs/04-calendar/requirements.md` |
-| F5-R1 … F5-R7 | `.kiro/specs/05-notifications/requirements.md` |
-| F6-R1 … F6-R14 | `.kiro/specs/06-focus-analysis/requirements.md` |
-| NFR-1 … NFR-11 | `.kiro/steering/tech.md` (standards) and each spec's "Non-Functional Acceptance Criteria" section |
+Every functional requirement appears exactly once in the specs, with identical acceptance criteria. Regenerate this table whenever a requirement is added, renamed, or moved.
+
+| ID | Requirement | Spec file | Heading |
+|---|---|---|---|
+| F1-R1 | Project scaffold and CI | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 1: Project scaffold and CI |
+| F1-R2 | Design system and app shell | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 2: Design system and app shell |
+| F1-R3 | Sign in with Google | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 3: Sign in with Google |
+| F1-R4 | Email or username with password | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 4: Email or username with password |
+| F1-R5 | Email verification | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 5: Email verification |
+| F1-R6 | Password reset and change | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 6: Password reset and change |
+| F1-R7 | Rate limiting and anti-enumeration | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 7: Rate limiting and anti-enumeration |
+| F1-R8 | Profile and settings | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 8: Profile and settings |
+| F1-R9 | Sessions and sign-out | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 9: Sessions and sign-out |
+| F1-R10 | Registration flag and admin | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 10: Registration flag and admin |
+| F1-R11 | Account deletion | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 11: Account deletion |
+| F1-R12 | Legal pages | `.kiro/specs/01-foundation-auth/requirements.md` | Requirement 12: Legal pages |
+| F2-R1 | Create an instant session | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 1: Create an instant session |
+| F2-R2 | Create a scheduled session | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 2: Create a scheduled session |
+| F2-R3 | Edit, reschedule, cancel | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 3: Edit, reschedule, cancel |
+| F2-R4 | Lifecycle and expiry | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 4: Lifecycle and expiry |
+| F2-R5 | Invite by identity | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 5: Invite by identity |
+| F2-R6 | Invite link | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 6: Invite link |
+| F2-R7 | Access control and room tokens | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 7: Access control and room tokens |
+| F2-R8 | Join rules | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 8: Join rules |
+| F2-R9 | Pre-join screen | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 9: Pre-join screen |
+| F2-R10 | In-room experience | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 10: In-room experience |
+| F2-R11 | Presence tracking via webhooks | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 11: Presence tracking via webhooks |
+| F2-R12 | Camera-on tracking | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 12: Camera-on tracking |
+| F2-R13 | Usage caps | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 13: Usage caps |
+| F2-R14 | Home page | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 14: Home page |
+| F2-R15 | Session detail page | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 15: Session detail page |
+| F2-R16 | Sessions list | `.kiro/specs/02-study-sessions/requirements.md` | Requirement 16: Sessions list |
+| F3-R1 | Daily target | `.kiro/specs/03-dashboard-history/requirements.md` | Requirement 1: Daily target |
+| F3-R2 | Study-time computation | `.kiro/specs/03-dashboard-history/requirements.md` | Requirement 2: Study-time computation |
+| F3-R3 | Dashboard widgets | `.kiro/specs/03-dashboard-history/requirements.md` | Requirement 3: Dashboard widgets |
+| F3-R4 | History | `.kiro/specs/03-dashboard-history/requirements.md` | Requirement 4: History |
+| F3-R5 | Rollups | `.kiro/specs/03-dashboard-history/requirements.md` | Requirement 5: Rollups |
+| F3-R6 | End-to-end correctness | `.kiro/specs/03-dashboard-history/requirements.md` | Requirement 6: End-to-end correctness |
+| F4-R1 | Calendar views | `.kiro/specs/04-calendar/requirements.md` | Requirement 1: Calendar views |
+| F4-R2 | Add to Google Calendar | `.kiro/specs/04-calendar/requirements.md` | Requirement 2: Add to Google Calendar |
+| F4-R3 | ICS download | `.kiro/specs/04-calendar/requirements.md` | Requirement 3: ICS download |
+| F4-R4 | Personal iCal feed | `.kiro/specs/04-calendar/requirements.md` | Requirement 4: Personal iCal feed |
+| F4-R5 | Future-sync readiness | `.kiro/specs/04-calendar/requirements.md` | Requirement 5: Future-sync readiness |
+| F4-R6 | Timezone correctness | `.kiro/specs/04-calendar/requirements.md` | Requirement 6: Timezone correctness |
+| F5-R1 | Notification types and triggers | `.kiro/specs/05-notifications/requirements.md` | Requirement 1: Notification types and triggers |
+| F5-R2 | In-app notifications | `.kiro/specs/05-notifications/requirements.md` | Requirement 2: In-app notifications |
+| F5-R3 | Email | `.kiro/specs/05-notifications/requirements.md` | Requirement 3: Email |
+| F5-R4 | Web Push | `.kiro/specs/05-notifications/requirements.md` | Requirement 4: Web Push |
+| F5-R5 | Preferences | `.kiro/specs/05-notifications/requirements.md` | Requirement 5: Preferences |
+| F5-R6 | Scheduler endpoint | `.kiro/specs/05-notifications/requirements.md` | Requirement 6: Scheduler endpoint |
+| F5-R7 | Delivery log and retries | `.kiro/specs/05-notifications/requirements.md` | Requirement 7: Delivery log and retries |
+| F6-R1 | Settings opt-ins | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 1: Settings opt-ins |
+| F6-R2 | Per-session consent and indicator | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 2: Per-session consent and indicator |
+| F6-R3 | Local recording pipeline | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 3: Local recording pipeline |
+| F6-R4 | Storage rules | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 4: Storage rules |
+| F6-R5 | Analysis trigger | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 5: Analysis trigger |
+| F6-R6 | Worker pipeline | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 6: Worker pipeline |
+| F6-R7 | Callback handling | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 7: Callback handling |
+| F6-R8 | Deletion guarantees | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 8: Deletion guarantees |
+| F6-R9 | Report UI | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 9: Report UI |
+| F6-R10 | Sharing and leaderboard | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 10: Sharing and leaderboard |
+| F6-R11 | Privacy copy | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 11: Privacy copy |
+| F6-R12 | Unsupported browsers and failures | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 12: Unsupported browsers and failures |
+| F6-R13 | Cost guardrails | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 13: Cost guardrails |
+| F6-R14 | Testing | `.kiro/specs/06-focus-analysis/requirements.md` | Requirement 14: Testing |
+| NFR-1 … NFR-11 | Non-functional requirements (section 6) | `.kiro/steering/tech.md` and each spec's "Non-Functional Acceptance Criteria" section | — |
 
 ---
 
