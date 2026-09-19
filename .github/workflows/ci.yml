@@ -173,8 +173,9 @@ jobs:
       # `next build` needs no environment variables; the instrumentation hook
       # that validates them runs only when the server starts.
       - run: npm run build
-      # Task 2.4 appends the bundle-budget check here (F1-R2.10):
-      #   - run: node scripts/check-bundle-budget.mjs
+      # Fails when any route except /sessions/[id]/room ships more than 200 KB
+      # of gzipped JavaScript (F1-R2.10; scripts/check-bundle-budget.mjs).
+      - run: npm run check:bundle
       - name: Record duration
         if: always()
         working-directory: ${{ github.workspace }}
