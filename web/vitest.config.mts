@@ -49,6 +49,7 @@ export default defineConfig({
           name: "api",
           environment: "node",
           include: ["tests/api/**/*.test.ts"],
+          setupFiles: ["./tests/api/setup.ts"],
           // API tests share one test database; run files one at a time.
           fileParallelism: false,
         },
