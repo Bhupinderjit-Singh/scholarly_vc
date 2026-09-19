@@ -1,1 +1,171 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * Scholarly ships a single light theme (product.md). Generated shadcn
+ * components still carry `dark:` utilities; this variant keeps them inert
+ * because no element ever gets the `.dark` class. Removing the line would
+ * make Tailwind fall back to `prefers-color-scheme: dark` and switch the
+ * OS-dark users to an unreviewed palette.
+ */
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Scholarly design tokens (tech.md "Design tokens"). `static` emits every
+ * token as a CSS custom property on :root even before a utility uses it
+ * (F1-R2.1). Text is always ink or ink-muted; pastels are surfaces. The
+ * contrast of every text/surface pair is checked in
+ * tests/unit/theme-contrast.test.ts (F1-R2.2, Property 9).
+ */
+@theme static {
+  --color-lavender: #e6e0f8;
+  --color-mint: #d9f2e6;
+  --color-peach: #ffe5d4;
+  --color-sky: #dceefb;
+  --color-butter: #fff3c4;
+  --color-blush: #fadde1;
+  --color-ink: #1f2933;
+  --color-ink-muted: #52606d;
+  --color-paper: #fbfaf7;
+  --color-line: #e4e7eb;
+
+  /* Inter is loaded in app/layout.tsx via next/font and exposed as --font-inter. */
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+
+  --shadow-soft: 0 4px 16px rgb(31 41 51 / 0.06);
+
+  /* F1-R2.7: transitions stay within 150–250 ms. Utilities default to 150 ms. */
+  --default-transition-duration: 150ms;
+}
+
+/*
+ * shadcn/ui semantic variables mapped onto the tokens (design.md "Design
+ * system"). --radius is the 1rem `rounded-xl` corner from tech.md; the scale
+ * below derives the other steps from it so `rounded-xl` is exactly 1rem.
+ */
+:root {
+  color-scheme: light;
+
+  --radius: 1rem;
+
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+  --card: #ffffff;
+  --card-foreground: var(--color-ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-ink);
+  --primary-foreground: var(--color-paper);
+  --secondary: var(--color-lavender);
+  --secondary-foreground: var(--color-ink);
+  --muted: #f1eff9;
+  --muted-foreground: var(--color-ink-muted);
+  --accent: var(--color-sky);
+  --accent-foreground: var(--color-ink);
+  --destructive: #9f1d35;
+  --border: var(--color-line);
+  --input: var(--color-line);
+  --ring: var(--color-ink);
+
+  /* Chart palette: the pastel tokens in a fixed order; spec 03 may refine. */
+  --chart-1: var(--color-lavender);
+  --chart-2: var(--color-mint);
+  --chart-3: var(--color-peach);
+  --chart-4: var(--color-sky);
+  --chart-5: var(--color-butter);
+
+  /* Sidebar tokens are required by the shadcn theme contract; unused for now. */
+  --sidebar: var(--color-paper);
+  --sidebar-foreground: var(--color-ink);
+  --sidebar-primary: var(--color-ink);
+  --sidebar-primary-foreground: var(--color-paper);
+  --sidebar-accent: var(--color-lavender);
+  --sidebar-accent-foreground: var(--color-ink);
+  --sidebar-border: var(--color-line);
+  --sidebar-ring: var(--color-ink);
+}
+
+/* Bridge the semantic variables into Tailwind utilities (bg-background, …). */
+@theme inline {
+  --font-heading: var(--font-sans);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Radius scale: xl is the base (cards, dialogs); smaller steps for controls. */
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.625);
+  --radius-lg: calc(var(--radius) * 0.75);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.5);
+  --radius-3xl: calc(var(--radius) * 2);
+  --radius-4xl: calc(var(--radius) * 2.5);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply font-sans;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  /*
+   * F1-R2.8: visible focus indicator for keyboard navigation. shadcn controls
+   * set `outline-none` and draw their own ink ring instead, so this covers
+   * links and any element that is not a shadcn primitive.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  /* F1-R2.6: neutralize non-essential motion when the user asks for it. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
