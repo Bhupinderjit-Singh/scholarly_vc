@@ -3,7 +3,7 @@
  *
  * Generated from the auth instance in `lib/auth/auth.ts` with
  *
- *   npx @better-auth/cli generate --config lib/auth/auth.ts \
+ *   npx @better-auth/cli@latest generate --config lib/auth/auth.ts \
  *     --output lib/db/schema/auth.ts --yes
  *
  * (@better-auth/cli 1.4.21) and checked field by field against the tables
@@ -11,6 +11,9 @@
  * `.tables`): same tables, columns, nullability, uniqueness, indexes and
  * `ON DELETE CASCADE` references. The adapter maps the camelCase field
  * names Better Auth uses to these snake_case columns.
+ *
+ * The CLI is not a dependency: run it with npx when the schema needs
+ * regenerating.
  *
  * Two deliberate edits after generation, to re-apply if the file is ever
  * regenerated (for example when a later spec adds a plugin):

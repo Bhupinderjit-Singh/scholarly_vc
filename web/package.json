@@ -43,7 +43,6 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
-    "@better-auth/cli": "^1.4.21",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.2",
@@ -66,10 +65,5 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.0.1"
-  },
-  "overrides": {
-    "@better-auth/cli": {
-      "vitest": "^5.0.1"
-    }
   }
 }
