@@ -9,7 +9,7 @@ Scope note: Scholarly serves at most about 10 people. Every task takes the simpl
 ## Tasks
 
 - [ ] 1. Scaffold the web project and CI
-- [ ] 1.1 Create the Next.js application in `web/`
+- [x] 1.1 Create the Next.js application in `web/`
   - Initialize Next.js 16 (App Router, TypeScript `strict`, ESLint, Prettier), Tailwind CSS v4, React 19; set `engines.node` to 22 and add `.nvmrc`
   - Add npm scripts: `dev`, `build`, `start`, `lint`, `typecheck`, `test:unit`, `test:api`, `test:e2e`, `db:generate`, `db:migrate`
   - Configure Vitest with two projects (`node` for `lib/**`, `jsdom` for components with Testing Library) and add `fast-check`; configure Playwright with a `webServer` that builds and starts the app
