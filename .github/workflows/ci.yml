@@ -1,0 +1,391 @@
+# Scholarly CI — spec 01-foundation-auth, task 1.5 (F1-R1.5, F1-R1.6).
+#
+# Purpose: run lint, typecheck, format check, unit tests, API tests against a
+# Postgres 16 service container, a production build, Playwright e2e, and
+# `npm audit` on every push to `main` and every pull request. Pushes to `main`
+# additionally run `migrate`, which applies the checked-in Drizzle migrations
+# to the production database (design.md, `web/lib/db`).
+#
+# Budget: the whole run must finish in under 10 minutes on GitHub-hosted
+# runners (tech.md; F1-R1.6). Jobs run in parallel with a hard
+# `timeout-minutes: 10` each. Every job appends its own duration to the run
+# summary and the `summary` job records the total wall time, so a slow-down is
+# visible without opening logs.
+#
+# Secrets: pull request runs never see secrets. Only `migrate` reads one
+# (`DATABASE_URL`, from the `production` environment) and it is gated to pushes
+# on `main`; every other job uses a throwaway service-container database and
+# placeholder values. GitHub additionally withholds secrets from workflows
+# triggered by forks.
+#
+# Actions: actions/checkout, actions/setup-node, actions/cache,
+# actions/upload-artifact only. No third-party actions.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# One run per branch or pull request; a newer push cancels the older run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+defaults:
+  run:
+    shell: bash
+    # The app lives in web/. Steps that must run at the repository root
+    # (before checkout, or in a job without one) override this explicitly.
+    working-directory: web
+
+jobs:
+  lint-typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # The timer starts before checkout, when web/ does not exist yet, so
+      # this step and its twin at the end of every job run at the repo root.
+      - name: Start timer
+        working-directory: ${{ github.workspace }}
+        run: echo "START=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run format:check
+      - name: Record duration
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          {
+            echo "| Job | Duration | Status |"
+            echo "|---|---|---|"
+            echo "| ${{ github.job }} | $(( $(date +%s) - ${START:-$(date +%s)} ))s | ${{ job.status }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Start timer
+        working-directory: ${{ github.workspace }}
+        run: echo "START=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run test:unit
+      - name: Record duration
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          {
+            echo "| Job | Duration | Status |"
+            echo "|---|---|---|"
+            echo "| ${{ github.job }} | $(( $(date +%s) - ${START:-$(date +%s)} ))s | ${{ job.status }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: scholarly_test
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U postgres -d scholarly_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # The `api` Vitest project reads DATABASE_URL_TEST (tests/api/setup.ts)
+      # and refuses to run when it equals DATABASE_URL, because it truncates
+      # tables. So DATABASE_URL stays unset here and is scoped to the
+      # migration step below, the same way drizzle.config.ts documents it.
+      DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/scholarly_test
+    steps:
+      - name: Start timer
+        working-directory: ${{ github.workspace }}
+        run: echo "START=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Migrate test database
+        # `drizzle-kit migrate` reads DATABASE_URL. Skips until the first
+        # migration lands (task 3.1) so the job passes while
+        # web/lib/db/migrations is still empty.
+        run: |
+          if compgen -G "lib/db/migrations/*.sql" > /dev/null; then
+            DATABASE_URL="$DATABASE_URL_TEST" npm run db:migrate
+          else
+            echo "::notice::No migrations in web/lib/db/migrations yet; skipping drizzle-kit migrate."
+          fi
+      - run: npm run test:api
+      - name: Record duration
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          {
+            echo "| Job | Duration | Status |"
+            echo "|---|---|---|"
+            echo "| ${{ github.job }} | $(( $(date +%s) - ${START:-$(date +%s)} ))s | ${{ job.status }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Start timer
+        working-directory: ${{ github.workspace }}
+        run: echo "START=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      # `next build` needs no environment variables; the instrumentation hook
+      # that validates them runs only when the server starts.
+      - run: npm run build
+      # Task 2.4 appends the bundle-budget check here (F1-R2.10):
+      #   - run: node scripts/check-bundle-budget.mjs
+      - name: Record duration
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          {
+            echo "| Job | Duration | Status |"
+            echo "|---|---|---|"
+            echo "| ${{ github.job }} | $(( $(date +%s) - ${START:-$(date +%s)} ))s | ${{ job.status }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: scholarly_test
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U postgres -d scholarly_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Playwright starts the production server (`next build && next start`),
+      # whose instrumentation hook refuses to boot without a complete, valid
+      # environment (web/lib/env.ts). These values are valid in shape only.
+      CI: "true"
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/scholarly_test
+      BETTER_AUTH_SECRET: ci-only-secret-not-for-production-0123456789
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      GOOGLE_CLIENT_ID: ci-placeholder
+      GOOGLE_CLIENT_SECRET: ci-placeholder
+      RESEND_API_KEY: re_ci_placeholder
+      EMAIL_FROM: "Scholarly <no-reply@example.com>"
+      EMAIL_TRANSPORT: capture
+      E2E_TEST_MODE: "true"
+      REGISTRATION_OPEN: "true"
+    steps:
+      - name: Start timer
+        working-directory: ${{ github.workspace }}
+        run: echo "START=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Read Playwright version
+        id: playwright
+        run: |
+          version="$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Install Playwright system dependencies
+        # The browser binaries come from the cache; the OS packages do not.
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - name: Migrate test database
+        run: |
+          if compgen -G "lib/db/migrations/*.sql" > /dev/null; then
+            npm run db:migrate
+          else
+            echo "::notice::No migrations in web/lib/db/migrations yet; skipping drizzle-kit migrate."
+          fi
+      - run: npm run test:e2e
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Record duration
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          {
+            echo "| Job | Duration | Status |"
+            echo "|---|---|---|"
+            echo "| ${{ github.job }} | $(( $(date +%s) - ${START:-$(date +%s)} ))s | ${{ job.status }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Start timer
+        working-directory: ${{ github.workspace }}
+        run: echo "START=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - name: Record duration
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          {
+            echo "| Job | Duration | Status |"
+            echo "|---|---|---|"
+            echo "| ${{ github.job }} | $(( $(date +%s) - ${START:-$(date +%s)} ))s | ${{ job.status }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  migrate:
+    # Applies the checked-in Drizzle migrations to production. Runs after the
+    # fast checks pass, only for pushes to `main`, and reads the one secret in
+    # this workflow from the `production` environment. Drizzle applies all
+    # pending migrations in a single transaction, so a cancelled run rolls
+    # back cleanly and the next push retries.
+    needs: [lint-typecheck, unit, api, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Start timer
+        working-directory: ${{ github.workspace }}
+        run: echo "START=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Apply migrations
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::notice::DATABASE_URL secret is not configured; skipping migrations."
+            exit 0
+          fi
+          if ! compgen -G "lib/db/migrations/*.sql" > /dev/null; then
+            echo "::notice::No migrations in web/lib/db/migrations yet; nothing to apply."
+            exit 0
+          fi
+          npm run db:migrate
+      - name: Record duration
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          {
+            echo "| Job | Duration | Status |"
+            echo "|---|---|---|"
+            echo "| ${{ github.job }} | $(( $(date +%s) - ${START:-$(date +%s)} ))s | ${{ job.status }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  summary:
+    # One place to read the run: per-job results, the overall verdict, and the
+    # total wall time against the 10-minute budget. Fails when any job failed
+    # or was cancelled, so branch protection can require just this check.
+    needs: [lint-typecheck, unit, api, build, e2e, audit, migrate]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Job-level permissions replace the workflow-level block, so restate
+    # `contents: read`; `actions: read` lets `gh api` read the run's start time.
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Write run summary
+        # This job has no checkout, so web/ does not exist here.
+        working-directory: ${{ github.workspace }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULTS: ${{ toJSON(needs) }}
+          FAILED: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          started="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .run_started_at 2>/dev/null || true)"
+          if [ -n "$started" ]; then
+            total="$(( $(date +%s) - $(date -u -d "$started" +%s) ))s"
+          else
+            total="unavailable"
+          fi
+          {
+            echo "## CI summary"
+            echo
+            echo "| Job | Result |"
+            echo "|---|---|"
+            jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"' <<< "$RESULTS"
+            echo
+            echo "Total wall time: **$total** (target: under 600s, F1-R1.6). Per-job durations are in each job's section."
+            echo
+            if [ "$FAILED" = "true" ]; then
+              echo "**Overall: failure**"
+            else
+              echo "**Overall: success**"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$FAILED" = "true" ]; then
+            exit 1
+          fi
