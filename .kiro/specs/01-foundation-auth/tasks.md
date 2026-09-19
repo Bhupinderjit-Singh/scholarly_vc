@@ -8,7 +8,7 @@ Scope note: Scholarly serves at most about 10 people. Every task takes the simpl
 
 ## Tasks
 
-- [ ] 1. Scaffold the web project and CI
+- [x] 1. Scaffold the web project and CI
 - [x] 1.1 Create the Next.js application in `web/`
   - Initialize Next.js 16 (App Router, TypeScript `strict`, ESLint, Prettier), Tailwind CSS v4, React 19; set `engines.node` to 22 and add `.nvmrc`
   - Add npm scripts: `dev`, `build`, `start`, `lint`, `typecheck`, `test:unit`, `test:api`, `test:e2e`, `db:generate`, `db:migrate`
@@ -17,39 +17,39 @@ Scope note: Scholarly serves at most about 10 people. Every task takes the simpl
   - Create the folder layout from `structure.md` (`app/(auth)`, `app/(app)`, `app/api`, `components/ui`, `components/shell`, `lib/domain`, `lib/db`, `lib/auth`, `lib/email`, `emails`, `tests/unit`, `tests/api`, `tests/e2e`)
   - _Requirements: 1.1, 1.7, 1.8_
 
-- [ ] 1.2 Add validated environment and structured logging
+- [x] 1.2 Add validated environment and structured logging
   - Implement `lib/env.ts` with a Zod schema for the variables in the design (required now: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_APP_URL`; defaults for `ADMIN_EMAILS`, `REGISTRATION_OPEN`; optional `EMAIL_TRANSPORT`, `E2E_TEST_MODE`; later-spec variables optional)
   - Add `instrumentation.ts` whose `register()` imports `lib/env.ts` so startup fails on invalid configuration and logs only variable names
   - Implement `lib/log.ts` (JSON lines with `requestId`, `userId`, `route`, `status`, `durationMs`) and a `redact` helper that strips `email`, `name`, `password`, `token`, `cookie`
   - Write unit tests: missing and malformed variables produce an error listing exactly the offending names; `redact` removes sensitive keys
   - _Requirements: 1.3_
 
-- [ ]* 1.3 Property test for environment validation
+- [x]* 1.3 Property test for environment validation
   - For random subsets of required keys removed from a valid environment, assert the error lists exactly those keys and never a value (Property 12)
   - _Requirements: 1.3_
 
-- [ ] 1.4 Add the database client, Drizzle configuration, and health endpoint
+- [x] 1.4 Add the database client, Drizzle configuration, and health endpoint
   - Implement `lib/db/client.ts` with `pg.Pool` (max 5, SSL when the URL requires it) wrapped by Drizzle; add `drizzle.config.ts` pointing at `lib/db/schema` and `lib/db/migrations`
   - Implement `app/api/health/route.ts`: `SELECT 1` with a 2 s timeout; `200 { status: "ok", db: "ok" }` or `503 { status: "degraded", db: "unreachable" }`
   - Use Neon branches instead of a local database (no Docker or local Postgres install): document creating `dev` and `test` branches from the Neon project, setting `DATABASE_URL` to the `dev` branch and `DATABASE_URL_TEST` to the `test` branch; API tests reset the `test` branch's tables between runs
   - Write API tests for the health route: 200 against the test database, 503 when the pool points at a closed port
   - _Requirements: 1.2, 1.4_
 
-- [ ] 1.5 Add the GitHub Actions workflow
+- [x] 1.5 Add the GitHub Actions workflow
   - Create `.github/workflows/ci.yml` with parallel jobs `lint-typecheck`, `unit`, `api` (Postgres 16 service container), `build`, `e2e` (Playwright browsers cached), and `audit` (`npm audit --audit-level=high`), all on Node 22 with `npm ci` caching
   - Add a `migrate` job that runs `drizzle-kit migrate` with the `DATABASE_URL` secret on pushes to `main` only
   - Keep total wall time under 10 minutes; record job durations in the workflow summary
   - _Requirements: 1.5, 1.6_
 
 - [ ] 2. Build the design system, app shell, and legal pages
-- [ ] 2.1 Define theme tokens and install UI primitives
+- [x] 2.1 Define theme tokens and install UI primitives
   - Add the pastel tokens from `tech.md` to `app/globals.css` using Tailwind v4 `@theme` (colors, `--font-sans`, `--radius-xl`, `--shadow-soft`) and map shadcn/ui semantic variables to them as specified in the design (ink text on pastel surfaces, `--primary` ink, `--destructive` deep rose)
   - Initialize shadcn/ui for Tailwind v4 and add: button, input, label, card, dialog, dropdown-menu, avatar, badge, skeleton, sonner, tabs, switch, command, tooltip, sheet, separator, alert
   - Load Inter through `next/font/google` as `--font-inter`; add the global `:focus-visible` ring and the `prefers-reduced-motion` rule; keep transition utilities at 150–200 ms
   - Write a unit test that computes WCAG contrast for every text/surface pair in the token map and fails below 4.5:1 (Property 9)
   - _Requirements: 2.1, 2.2, 2.6, 2.7, 2.8_
 
-- [ ] 2.2 Build the app shell and empty states
+- [x] 2.2 Build the app shell and empty states
   - Create `app/(app)/layout.tsx` with `components/shell/top-nav.tsx` (visible at ≥ 1024 px: Home, Sessions, Calendar, bell, profile menu) and `bottom-nav.tsx` (below 1024 px: Home, Sessions, Calendar, Profile; bell stays in the header), `notification-bell.tsx` placeholder, `profile-menu.tsx` (Settings, Admin when admin, Sign out), `app-footer.tsx`, `page-header.tsx`, `empty-state.tsx`
   - Create `app/(auth)/layout.tsx` without the shell
   - Add `loading.tsx` skeletons for Home and Settings segments, matching the final layouts
@@ -57,17 +57,17 @@ Scope note: Scholarly serves at most about 10 people. Every task takes the simpl
   - Write component tests: nav variants render the right items, empty state shows explanation and action, skeletons render without data
   - _Requirements: 2.3, 2.4, 2.5, 2.9_
 
-- [ ] 2.3 Add the privacy and terms pages
+- [x] 2.3 Add the privacy and terms pages
   - Create static `app/privacy/page.tsx` and `app/terms/page.tsx` covering the data collected, third-party services (Google sign-in, LiveKit, Neon, Vercel, Resend, Cloudflare R2, Modal), Phase 2 recording behavior and deletion timelines, and how to delete an account
   - Link both pages from the sign-up page and the footer
   - _Requirements: 12.1, 12.2, 12.3_
 
-- [ ] 2.4 Enforce the JavaScript budget in CI
+- [x] 2.4 Enforce the JavaScript budget in CI
   - Write `scripts/check-bundle-budget.mjs` that reads `.next/app-build-manifest.json` after `next build`, sums gzipped chunk sizes per route, and fails when any route except `/sessions/[id]/room` exceeds 200 KB; call it from the `build` job
   - _Requirements: 2.10_
 
 - [ ] 3. Set up Better Auth, database schema, guards, and email
-- [ ] 3.1 Create the database schema and first migration
+- [x] 3.1 Create the database schema and first migration
   - Generate the Better Auth tables with `npx @better-auth/cli generate` (user with `username` and `display_username`, session, account, verification, rate_limit) into `lib/db/schema/auth.ts`
   - Add `lib/db/schema/settings.ts` with `user_settings` (defaults from the design), `auth_attempts`, and `email_outbox`; re-export from `schema/index.ts`; all foreign keys to `user.id` use `ON DELETE CASCADE`
   - Generate and commit the first migration with `drizzle-kit generate`
@@ -85,7 +85,7 @@ Scope note: Scholarly serves at most about 10 people. Every task takes the simpl
   - For random email lists with varied case and whitespace, `isAdmin` is true exactly for listed addresses (Property 8)
   - _Requirements: 10.3, 10.5_
 
-- [ ] 3.4 Add request proxy and security headers
+- [x] 3.4 Add request proxy and security headers
   - Implement `web/proxy.ts`: per-request CSP nonce and `Content-Security-Policy` per the design, `x-nonce` and `x-request-id` headers, and optimistic redirect to `/sign-in?next=<path>` for `(app)` routes without a session cookie
   - Add HSTS, `X-Content-Type-Options`, `Referrer-Policy`, and `Permissions-Policy` in `next.config.ts` `headers()`
   - Write an API test asserting the headers on a page response and the redirect for an unauthenticated `(app)` request
