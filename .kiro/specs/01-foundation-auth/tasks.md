@@ -31,7 +31,7 @@ Scope note: Scholarly serves at most about 10 people. Every task takes the simpl
 - [ ] 1.4 Add the database client, Drizzle configuration, and health endpoint
   - Implement `lib/db/client.ts` with `pg.Pool` (max 5, SSL when the URL requires it) wrapped by Drizzle; add `drizzle.config.ts` pointing at `lib/db/schema` and `lib/db/migrations`
   - Implement `app/api/health/route.ts`: `SELECT 1` with a 2 s timeout; `200 { status: "ok", db: "ok" }` or `503 { status: "degraded", db: "unreachable" }`
-  - Add a `docker-compose.yml` (Postgres 16) for local development and document `DATABASE_URL_TEST` for API tests
+  - Use Neon branches instead of a local database (no Docker or local Postgres install): document creating `dev` and `test` branches from the Neon project, setting `DATABASE_URL` to the `dev` branch and `DATABASE_URL_TEST` to the `test` branch; API tests reset the `test` branch's tables between runs
   - Write API tests for the health route: 200 against the test database, 503 when the pool points at a closed port
   - _Requirements: 1.2, 1.4_
 
@@ -220,7 +220,7 @@ Scope note: Scholarly serves at most about 10 people. Every task takes the simpl
 
 - [ ] 12. Write the deployment guide
   - Create `docs/DEPLOYMENT.md`: creating the Neon project and pooled `DATABASE_URL`, the Google Cloud OAuth client (authorized origins and redirect URI `/api/auth/callback/google`, privacy policy URL), Resend domain and API key, Vercel project with root directory `web/` and all environment variables, running the first migration, setting `ADMIN_EMAILS`, and how to close registration
-  - Add a `web/README.md` with local setup (`docker compose up`, `.env`, `npm run db:migrate`, `npm run dev`) and the test commands
+  - Add a `web/README.md` with local setup (Neon `dev` and `test` branches, `.env`, `npm run db:migrate`, `npm run dev`) and the test commands; note that CI uses a Postgres service container on GitHub's runners, so nothing needs to be installed locally
   - _Requirements: 1.7_
 
 ## Task Dependency Graph
